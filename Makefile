@@ -1,6 +1,7 @@
 DEBUG=0
 PERF_TEST=0
 HAVE_SHARED_CONTEXT=0
+HAVE_ANGLE ?= 0
 WITH_CRC=brumme
 FORCE_GLES=0
 HAVE_OPENGL=1
@@ -42,6 +43,7 @@ endif
 # Dirs
 ROOT_DIR := .
 LIBRETRO_DIR := $(ROOT_DIR)/libretro
+ANGLE_DIR ?= $(ROOT_DIR)/../ANGLE
 
 ifeq ($(platform),)
    platform = unix
@@ -823,8 +825,15 @@ NOSSE=1
 else ifneq (,$(findstring win,$(platform)))
    TARGET := $(TARGET_NAME)_libretro.dll
    LDFLAGS += -shared -static-libgcc -static-libstdc++ -Wl,--version-script=$(LIBRETRO_DIR)/link.T -lwinmm -lgdi32 
-   GL_LIB := -lopengl32
-   PLATFORM_EXT := win32
+   ifeq ($(HAVE_ANGLE), 1)
+	FORCE_GLES=1
+	GLES = 1
+      INCFLAGS += -I$(ANGLE_DIR)/include
+      GL_LIB = -L$(ANGLE_DIR) -lGLESv2
+   else
+	GL_LIB := -lopengl32
+   endif   
+PLATFORM_EXT := win32
    CC ?= gcc
    CXX ?= g++
    HAVE_THR_AL=1
