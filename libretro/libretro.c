@@ -975,8 +975,17 @@ static bool retro_init_gl(void)
 #endif
 }
 
+   static LONG CALLBACK VectoredExcepHandler(PEXCEPTION_POINTERS exInfo)
+   {
+      if (exInfo->ExceptionRecord->ExceptionCode == DBG_PRINTEXCEPTION_C)
+         return EXCEPTION_CONTINUE_EXECUTION;
+      else
+         return EXCEPTION_CONTINUE_SEARCH;
+   }
+
 void retro_init(void)
 {
+AddVectoredExceptionHandler(1, VectoredExcepHandler);
    struct retro_log_callback log;
    unsigned colorMode = RETRO_PIXEL_FORMAT_XRGB8888;
    uint64_t serialization_quirks = RETRO_SERIALIZATION_QUIRK_MUST_INITIALIZE;
