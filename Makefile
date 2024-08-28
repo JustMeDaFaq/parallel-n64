@@ -266,7 +266,7 @@ ifneq (,$(findstring unix,$(platform)))
    #######################################
    # Generic ARM
    ifneq (,$(findstring armv,$(platform)))
-      CPUFLAGS += -DNO_ASM -DARM -D__arm__ -DARM_ASM -DNOSSE
+      CPUFLAGS += -DNO_ASM -DARM -D__arm__ -DARM_ASM -DNOSSE -DARM_FIX
       WITH_DYNAREC=arm
       ifneq (,$(findstring neon,$(platform)))
          CPUFLAGS += -D__NEON_OPT -mfpu=neon
@@ -475,7 +475,8 @@ else ifeq ($(platform), emscripten)
    WITH_DYNAREC :=
 
    HAVE_PARALLEL = 0
-   CPUFLAGS += -DNOSSE -DEMSCRIPTEN -DNO_ASM -DNO_LIBCO -s USE_ZLIB=1 -s PRECISE_F32=1
+   HAVE_THR_AL = 1
+   CPUFLAGS += -DNOSSE -DEMSCRIPTEN -DNO_ASM -DNO_LIBCO
 
    WITH_DYNAREC =
    CC = emcc
@@ -909,6 +910,8 @@ ifeq ($(DEBUG), 1)
 else
 ifneq (,$(findstring msvc,$(platform)))
    CPUOPTS += -O2
+else ifeq ($(platform), emscripten)
+   CPUOPTS += -O3
 else
 	CPUOPTS += -Ofast
 endif
@@ -1004,8 +1007,11 @@ CXXFLAGS += -DINLINE="inline"
 endif
 
 # Fix for GCC 10, make sure its added to all stages of the compiler
+ifneq ($(platform), emscripten)
 ifeq "$(shell expr `gcc -dumpversion` \>= 10)" "1"
   CPUFLAGS += -fcommon
+endif
+CFLAGS += -fcommon
 endif
 
 # LTO
